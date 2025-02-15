@@ -2,43 +2,24 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
+
+	"mylenslocked/views"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
-var templates *template.Template
-
-func loadTemplates(glob string) error {
-	var err error
-	templates, err = template.ParseGlob(glob)
-	return err
-}
-
-func writeTemplate(page string, status int, data map[string]string, w http.ResponseWriter, r *http.Request) {
-	if status != http.StatusOK {
-		w.WriteHeader(status)
-	}
-	err := templates.ExecuteTemplate(w, page, map[string]string{"URL": r.RequestURI})
-	if err == nil {
-		return
-	}
-	http.Error(
-		w,
-		fmt.Sprintf("There was an error parsing the template: %s", err),
-		http.StatusInternalServerError,
-	)
-}
+// global: to replace
+var writeTemplate views.WriteTplFunc
 
 func home(w http.ResponseWriter, r *http.Request) {
-	writeTemplate("home.html", 200, map[string]string{"URL": r.RequestURI}, w, r)
+	writeTemplate(w, "home.html", map[string]string{"URL": r.RequestURI})
 }
 
 func contact(w http.ResponseWriter, r *http.Request) {
-	writeTemplate("contact.html", 200, map[string]string{"URL": r.RequestURI}, w, r)
+	writeTemplate(w, "contact.html", map[string]string{"URL": r.RequestURI})
 }
 
 func faq(w http.ResponseWriter, r *http.Request) {
@@ -47,11 +28,13 @@ func faq(w http.ResponseWriter, r *http.Request) {
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
-	writeTemplate("404.html", 404, map[string]string{"URL": r.RequestURI}, w, r)
+	w.WriteHeader(http.StatusNotFound)
+	writeTemplate(w, "404.html", map[string]string{"URL": r.RequestURI})
 }
 
 func main() {
-	err := loadTemplates("templates/*")
+	var err error
+	writeTemplate, err = views.LoadTemplates("views/templates/*html")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

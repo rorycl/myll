@@ -1,4 +1,4 @@
-module lenslocked
+module mylenslocked
 
 go 1.22.5
 
