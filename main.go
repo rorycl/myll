@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 
@@ -19,18 +18,27 @@ func loadTemplates(glob string) error {
 	return err
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
-	// log.Printf("%#v\n", templates.DefinedTemplates())
-	err := templates.ExecuteTemplate(w, "home.html", map[string]string{"URL": r.RequestURI})
+func writeTemplate(page string, status int, data map[string]string, w http.ResponseWriter, r *http.Request) {
+	if status != http.StatusOK {
+		w.WriteHeader(status)
+	}
+	err := templates.ExecuteTemplate(w, page, map[string]string{"URL": r.RequestURI})
 	if err == nil {
 		return
 	}
-	log.Println(err)
 	http.Error(
 		w,
 		fmt.Sprintf("There was an error parsing the template: %s", err),
 		http.StatusInternalServerError,
 	)
+}
+
+func home(w http.ResponseWriter, r *http.Request) {
+	writeTemplate("home.html", 200, map[string]string{"URL": r.RequestURI}, w, r)
+}
+
+func contact(w http.ResponseWriter, r *http.Request) {
+	writeTemplate("contact.html", 200, map[string]string{"URL": r.RequestURI}, w, r)
 }
 
 func faq(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +47,7 @@ func faq(w http.ResponseWriter, r *http.Request) {
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "not found", http.StatusNotFound)
+	writeTemplate("404.html", 404, map[string]string{"URL": r.RequestURI}, w, r)
 }
 
 func main() {
@@ -56,6 +64,7 @@ func main() {
 	r.Get("/faq", faq)
 	r.Get("/faq/", faq)
 	r.Get("/faq/{something}", faq)
+	r.Get("/contact", contact)
 	r.NotFound(notFound)
 	fmt.Println("serving on :3000")
 	http.ListenAndServe(":3000", r)
