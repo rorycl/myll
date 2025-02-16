@@ -6,8 +6,11 @@ import (
 	"net/http"
 )
 
+// WriteTplFunc is the function signature for a template writing
+// function returned from LoadTemplates
 type WriteTplFunc func(w http.ResponseWriter, page string, data any)
 
+// Load Templates is a closure for loading a group of templates
 func LoadTemplates(globPath string) (WriteTplFunc, error) {
 	templates, err := template.ParseGlob(globPath)
 	if err != nil {

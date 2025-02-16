@@ -22,4 +22,10 @@ func TestViews(t *testing.T) {
 	if strings.Contains(string(body), "test") {
 		t.Errorf("no test in body")
 	}
+
+	_, err = LoadTemplates("abcd")
+	if err == nil {
+		t.Error("expected an error from trying to load abcd templates")
+	}
+
 }
