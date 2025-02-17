@@ -1,6 +1,4 @@
-<!doctype html>
-<h1>Contact</h1>
-<body>
+{{define "page"}}
 <h1>FAQ Page</h1>
 <ul>
   {{range .}}
@@ -11,5 +9,4 @@
 {{define "qa"}}
 <li><b>{{.Question}}</b> {{.Answer}}</li>
 {{end}}
-</body>
-</html>
+{{end}}

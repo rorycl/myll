@@ -2,24 +2,32 @@ package controller
 
 import (
 	"fmt"
+	"io/fs"
 	"net/http"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
-// global: to replace
-var writeTemplate func(w http.ResponseWriter, page string, data any)
+type renderFunc func(w http.ResponseWriter, data any, pages ...string)
 
-func home(w http.ResponseWriter, r *http.Request) {
-	writeTemplate(w, "home.html", map[string]string{"URL": r.RequestURI})
+type controller struct {
+	render renderFunc
 }
 
-func contact(w http.ResponseWriter, r *http.Request) {
-	writeTemplate(w, "contact.html", map[string]string{"URL": r.RequestURI})
+func newController(f fs.FS, rf renderFunc) *controller {
+	return &controller{f, rf}
 }
 
-func faq(w http.ResponseWriter, r *http.Request) {
+func (c *controller) home(w http.ResponseWriter, r *http.Request) {
+	c.render(w, map[string]string{"URL": r.RequestURI}, "page.html", "home.html")
+}
+
+func (c *controller) contact(w http.ResponseWriter, r *http.Request) {
+	c.render(w, map[string]string{"URL": r.RequestURI}, "page.html", "contact.html")
+}
+
+func (c *controller) faq(w http.ResponseWriter, r *http.Request) {
 	questions := []struct {
 		Question string
 		Answer   string
@@ -37,22 +45,22 @@ func faq(w http.ResponseWriter, r *http.Request) {
 			Answer:   `Email us - <a href="mailto:support@lenslocked.com">support@lenslocked.com</a>`,
 		},
 	}
-	writeTemplate(w, "faq.html", questions)
+	c.render(w, questions, "page.html", "faq.html")
 }
 
-func faq2(w http.ResponseWriter, r *http.Request) {
+func (c *controller) faq2(w http.ResponseWriter, r *http.Request) {
 	something := chi.URLParam(r, "something")
 	fmt.Fprintf(w, "faq (with %s)", something)
 }
 
-func notFound(w http.ResponseWriter, r *http.Request) {
+func (c *controller) notFound(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	writeTemplate(w, "404.html", map[string]string{"URL": r.RequestURI})
+	c.render(w, questions, "page.html", "404.html")
 }
 
-func Serve(fn func(w http.ResponseWriter, page string, data any)) {
+func Serve(rf renderFunc) {
 
-	writeTemplate = fn
+	c := newController(rf)
 
 	r := chi.NewRouter()
 
@@ -61,12 +69,12 @@ func Serve(fn func(w http.ResponseWriter, page string, data any)) {
 	// r.Use(middleware.Recoverer)
 
 	// routes
-	r.Get("/", home)
-	r.Get("/faq", faq)
-	r.Get("/faq/", faq)
-	r.Get("/faq/{something}", faq)
-	r.Get("/contact", contact)
-	r.NotFound(notFound)
+	r.Get("/", c.home)
+	r.Get("/faq", c.faq)
+	r.Get("/faq/", c.faq)
+	r.Get("/faq/{something}", c.faq)
+	r.Get("/contact", c.contact)
+	r.NotFound(c.notFound)
 	fmt.Println("serving on :3000")
 	http.ListenAndServe(":3000", r)
 }
