@@ -63,41 +63,37 @@ func (v *View) renderTemplate(w http.ResponseWriter, t *template.Template, data 
 	)
 }
 
-/*
-func (v *View) render(endpoint string, w http.ResponseWriter, data any) {
+// Render is a router for view template rendering
+func (v *View) Render(endpoint string, w http.ResponseWriter, data any) {
 	switch endpoint {
 	case "home":
-		v.Home(w, r)
+		v.home(w, data)
 	case "contact":
-		v.Contact(w, r)
+		v.contact(w, data)
 	case "faq":
-		v.FAQ(w, r, data)
+		v.faq(w, data)
 	default:
-		v.NotFound(w, r)
+		v.notFound(w, data)
 	}
 }
-*/
 
-// Home view
-func (v *View) Home(w http.ResponseWriter, r *http.Request) {
-	data := map[string]string{"URL": r.RequestURI}
+// home view
+func (v *View) home(w http.ResponseWriter, data any) {
 	v.renderTemplate(w, v.templates["home"], data)
 }
 
-// Contact view
-func (v *View) Contact(w http.ResponseWriter, r *http.Request) {
-	data := map[string]string{"URL": r.RequestURI}
+// contact view
+func (v *View) contact(w http.ResponseWriter, data any) {
 	v.renderTemplate(w, v.templates["contact"], data)
 }
 
-// FAQ view, which receives FAQ data.
-func (v *View) FAQ(w http.ResponseWriter, r *http.Request, data any) {
+// faq view, which receives faq data.
+func (v *View) faq(w http.ResponseWriter, data any) {
 	v.renderTemplate(w, v.templates["faq"], data)
 }
 
-// NotFound view for 404 errors.
-func (v *View) NotFound(w http.ResponseWriter, r *http.Request) {
-	data := map[string]string{"URL": r.RequestURI}
+// notfound view for 404 errors.
+func (v *View) notFound(w http.ResponseWriter, data any) {
 	w.WriteHeader(http.StatusNotFound)
 	v.renderTemplate(w, v.templates["404"], data)
 }

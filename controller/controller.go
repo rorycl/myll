@@ -13,25 +13,24 @@ import (
 // controller is the struct off which url endpoints are routed to views
 // in viewer.
 type controller struct {
-	viewer *views.View
-	// render func(endpoint string, w http.ResponseWriter, r *http.Response, data any)
+	render func(endpoint string, w http.ResponseWriter, data any)
 }
 
 // newController makes a new controller
 func newController(v *views.View) *controller {
-	// return &controller{viewer: v, render: v.render}
-	return &controller{viewer: v}
+	return &controller{render: v.Render}
 }
 
 // home resolves the / and /home endpoints
 func (c *controller) home(w http.ResponseWriter, r *http.Request) {
-	// c.render("home", w, r, nil)
-	c.viewer.Home(w, r)
+	data := map[string]string{"URL": r.RequestURI}
+	c.render("home", w, data)
 }
 
 // contact resolves the /contact endpoint
 func (c *controller) contact(w http.ResponseWriter, r *http.Request) {
-	c.viewer.Contact(w, r)
+	data := map[string]string{"URL": r.RequestURI}
+	c.render("home", w, data)
 }
 
 // faq resolves the /faq endpoint
@@ -53,18 +52,20 @@ func (c *controller) faq(w http.ResponseWriter, r *http.Request) {
 			Answer:   `Email us - <a href="mailto:support@lenslocked.com">support@lenslocked.com</a>`,
 		},
 	}
-	c.viewer.FAQ(w, r, questions)
+	etc := chi.URLParam(r, "etc")
+	c.render("faq", w, map[string]any{"Questions": questions, "Params": etc})
 }
 
 // faq2 is an endpoint for messing around with routing, url params
 func (c *controller) faq2(w http.ResponseWriter, r *http.Request) {
-	something := chi.URLParam(r, "something")
-	fmt.Fprintf(w, "faq (with %s)", something)
+	etc := chi.URLParam(r, "etc")
+	fmt.Fprintf(w, "faq (with %s)", etc)
 }
 
 // notFound is a 404 endpoint
 func (c *controller) notFound(w http.ResponseWriter, r *http.Request) {
-	c.viewer.NotFound(w, r)
+	data := map[string]string{"URL": r.RequestURI}
+	c.render("notfound", w, data)
 }
 
 // Serve serves the urls and routes them to the associated endpoints
@@ -82,7 +83,7 @@ func Serve(viewer *views.View) {
 	r.Get("/home", c.home)
 	r.Get("/faq", c.faq)
 	r.Get("/faq/", c.faq)
-	r.Get("/faq/{something}", c.faq)
+	r.Get("/faq/{etc}", c.faq)
 	r.Get("/contact", c.contact)
 	r.NotFound(c.notFound)
 	fmt.Println("serving on :3000")

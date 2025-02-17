@@ -1,7 +1,10 @@
 {{define "page"}}
 <h1>FAQ Page</h1>
+{{ if .Params }}
+<p style="color: blue">{{ .Params }}</p>
+{{ end }}
 <ul>
-  {{range .}}
+  {{range .Questions }}
     {{template "qa" .}}
   {{end}}
 </ul>
