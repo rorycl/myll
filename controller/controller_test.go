@@ -21,7 +21,7 @@ func TestServe(t *testing.T) {
 		{
 			h:      home,
 			status: http.StatusOK,
-			want:   "page: home.html",
+			want:   "url: /",
 		},
 		{
 			h:      contact,
@@ -35,9 +35,8 @@ func TestServe(t *testing.T) {
 		},
 	}
 
-	wt := func(w http.ResponseWriter, page string, data any) {
-		fmt.Fprintf(w, "page: %s\n", page)
-		fmt.Fprint(w, data)
+	wt := func(w http.ResponseWriter, r *http.Response) {
+		fmt.Fprintf(w, "url: %s\n", r.Request.URL)
 	}
 	writeTemplate = wt
 

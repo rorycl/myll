@@ -13,10 +13,11 @@ import (
 var tpls embed.FS
 
 func main() {
-	writeTemplate, err := views.LoadTemplates(tpls, "views/templates", "*html", false)
+
+	viewer, err := views.NewView("viewfs", tpls, "views/templates", false)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	controller.Serve(writeTemplate)
+	controller.Serve(viewer)
 }

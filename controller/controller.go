@@ -2,31 +2,39 @@ package controller
 
 import (
 	"fmt"
-	"io/fs"
 	"net/http"
+
+	"mylenslocked/views"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
-type renderFunc func(w http.ResponseWriter, data any, pages ...string)
-
+// controller is the struct off which url endpoints are routed to views
+// in viewer.
 type controller struct {
-	render renderFunc
+	viewer *views.View
+	// render func(endpoint string, w http.ResponseWriter, r *http.Response, data any)
 }
 
-func newController(f fs.FS, rf renderFunc) *controller {
-	return &controller{f, rf}
+// newController makes a new controller
+func newController(v *views.View) *controller {
+	// return &controller{viewer: v, render: v.render}
+	return &controller{viewer: v}
 }
 
+// home resolves the / and /home endpoints
 func (c *controller) home(w http.ResponseWriter, r *http.Request) {
-	c.render(w, map[string]string{"URL": r.RequestURI}, "page.html", "home.html")
+	// c.render("home", w, r, nil)
+	c.viewer.Home(w, r)
 }
 
+// contact resolves the /contact endpoint
 func (c *controller) contact(w http.ResponseWriter, r *http.Request) {
-	c.render(w, map[string]string{"URL": r.RequestURI}, "page.html", "contact.html")
+	c.viewer.Contact(w, r)
 }
 
+// faq resolves the /faq endpoint
 func (c *controller) faq(w http.ResponseWriter, r *http.Request) {
 	questions := []struct {
 		Question string
@@ -45,23 +53,24 @@ func (c *controller) faq(w http.ResponseWriter, r *http.Request) {
 			Answer:   `Email us - <a href="mailto:support@lenslocked.com">support@lenslocked.com</a>`,
 		},
 	}
-	c.render(w, questions, "page.html", "faq.html")
+	c.viewer.FAQ(w, r, questions)
 }
 
+// faq2 is an endpoint for messing around with routing, url params
 func (c *controller) faq2(w http.ResponseWriter, r *http.Request) {
 	something := chi.URLParam(r, "something")
 	fmt.Fprintf(w, "faq (with %s)", something)
 }
 
+// notFound is a 404 endpoint
 func (c *controller) notFound(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	c.render(w, questions, "page.html", "404.html")
+	c.viewer.NotFound(w, r)
 }
 
-func Serve(rf renderFunc) {
+// Serve serves the urls and routes them to the associated endpoints
+func Serve(viewer *views.View) {
 
-	c := newController(rf)
-
+	c := newController(viewer)
 	r := chi.NewRouter()
 
 	// middleware
@@ -70,6 +79,7 @@ func Serve(rf renderFunc) {
 
 	// routes
 	r.Get("/", c.home)
+	r.Get("/home", c.home)
 	r.Get("/faq", c.faq)
 	r.Get("/faq/", c.faq)
 	r.Get("/faq/{something}", c.faq)
