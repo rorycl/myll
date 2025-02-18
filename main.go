@@ -13,7 +13,7 @@ import (
 var tpls embed.FS
 
 func main() {
-	viewer, err := views.NewView("viewfs", tpls, "views/templates", false)
+	viewer, err := views.NewView("viewfs", tpls, "views/templates", true)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
