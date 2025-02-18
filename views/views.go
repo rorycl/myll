@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"regexp"
 )
 
 // View is the viewer struct containing the fs.FS fileSystem holding
@@ -14,6 +15,8 @@ type View struct {
 	inDevelopment bool
 	fS            *fileSystem
 }
+
+var fileMatcher *regexp.Regexp = regexp.MustCompile("(?i)^[a-z0-9].+html")
 
 // NewView creates a new View.
 func NewView(fsName string, fS fs.FS, path string, inDevelopment bool) (*View, error) {
@@ -26,6 +29,20 @@ func NewView(fsName string, fS fs.FS, path string, inDevelopment bool) (*View, e
 	if err != nil {
 		return nil, fmt.Errorf("new view: cannot parse templates: %w", err)
 	}
+
+	// detect updates to files
+	if inDevelopment {
+		done := make(chan bool)
+		updateEvents, err := watchDir(path, fileMatcher, done)
+		if err != nil {
+			return v, fmt.Errorf("notify event watcher error: %w", err)
+		}
+		go func() {
+			for range updateEvents {
+				_ = v.parseTemplates()
+			}
+		}()
+	}
 	return v, nil
 }
 
@@ -33,10 +50,10 @@ func NewView(fsName string, fS fs.FS, path string, inDevelopment bool) (*View, e
 // fileSystem and stores them in View.templates
 func (v *View) parseTemplates() error {
 	endpointToTpls := map[string][]string{
-		"home":    []string{"page.html", "home.html"},
-		"contact": []string{"page.html", "contact.html"},
-		"faq":     []string{"page.html", "faq.html"},
-		"404":     []string{"page.html", "404.html"},
+		"home":    []string{"home.html", "tailwind.html"},
+		"contact": []string{"contact.html", "tailwind.html"},
+		"faq":     []string{"faq.html", "tailwind.html"},
+		"404":     []string{"404.html", "tailwind.html"},
 	}
 	v.templates = map[string]*template.Template{}
 	for endpoint, pages := range endpointToTpls {
