@@ -1,7 +1,7 @@
-{{define "page"}}
+{{template "header" .}}
 <h1>Page missing</h1>
 <p>
 Sorry, the page you tried to find (at "<code>{{ .URL }}</code>") has been permanently
 downsized.
 </p>
-{{ end }}
+{{template "footer" .}}
