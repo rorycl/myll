@@ -21,6 +21,27 @@ func newController(v *views.View) *controller {
 	return &controller{render: v.Render}
 }
 
+// routes adds the routes for the controller
+func (c *controller) routes() *chi.Mux {
+	r := chi.NewRouter()
+
+	// middleware
+	r.Use(middleware.Logger)
+	// r.Use(middleware.Recoverer)
+
+	// routes
+	r.Get("/", c.home)
+	r.Get("/home", c.home)
+	r.Get("/faq", c.faq)
+	r.Get("/faq/", c.faq)
+	r.Get("/faq/{etc}", c.faq)
+	r.Get("/contact", c.contact)
+	r.Get("/signup", c.signup)
+	r.NotFound(c.notFound)
+
+	return r
+}
+
 // home resolves the / and /home endpoints
 func (c *controller) home(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{"URL": r.RequestURI}
@@ -56,10 +77,16 @@ func (c *controller) faq(w http.ResponseWriter, r *http.Request) {
 	c.render("faq", w, map[string]any{"Questions": questions, "Params": etc})
 }
 
-// faq2 is an endpoint for messing around with routing, url params
+// faq2 is an endpoint for messing around with routing, url params etc.
 func (c *controller) faq2(w http.ResponseWriter, r *http.Request) {
 	etc := chi.URLParam(r, "etc")
 	fmt.Fprintf(w, "faq (with %s)", etc)
+}
+
+// signup resolves the /signup endpoint
+func (c *controller) signup(w http.ResponseWriter, r *http.Request) {
+	data := map[string]string{}
+	c.render("signup", w, data)
 }
 
 // notFound is a 404 endpoint
@@ -70,22 +97,8 @@ func (c *controller) notFound(w http.ResponseWriter, r *http.Request) {
 
 // Serve serves the urls and routes them to the associated endpoints
 func Serve(viewer *views.View) {
-
 	c := newController(viewer)
-	r := chi.NewRouter()
-
-	// middleware
-	r.Use(middleware.Logger)
-	// r.Use(middleware.Recoverer)
-
-	// routes
-	r.Get("/", c.home)
-	r.Get("/home", c.home)
-	r.Get("/faq", c.faq)
-	r.Get("/faq/", c.faq)
-	r.Get("/faq/{etc}", c.faq)
-	r.Get("/contact", c.contact)
-	r.NotFound(c.notFound)
+	r := c.routes()
 	fmt.Println("serving on :3000")
 	http.ListenAndServe(":3000", r)
 }

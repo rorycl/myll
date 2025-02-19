@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"log"
 	"net/http"
 	"regexp"
 )
@@ -39,6 +40,7 @@ func NewView(fsName string, fS fs.FS, path string, inDevelopment bool) (*View, e
 		}
 		go func() {
 			for range updateEvents {
+				log.Println("template change detected, reloading...")
 				_ = v.parseTemplates()
 			}
 		}()
@@ -54,12 +56,13 @@ func (v *View) parseTemplates() error {
 		"contact": []string{"contact.html", "tailwind.html"},
 		"faq":     []string{"faq.html", "tailwind.html"},
 		"404":     []string{"404.html", "tailwind.html"},
+		"signup":  []string{"signup.html", "tailwind.html"},
 	}
 	v.templates = map[string]*template.Template{}
 	for endpoint, pages := range endpointToTpls {
 		t, err := template.ParseFS(v.fS.fS, pages...)
 		if err != nil {
-			return err
+			return fmt.Errorf("template parse error for %v: %w", pages, err)
 		}
 		v.templates[endpoint] = t
 	}
@@ -89,6 +92,8 @@ func (v *View) Render(endpoint string, w http.ResponseWriter, data any) {
 		v.contact(w, data)
 	case "faq":
 		v.faq(w, data)
+	case "signup":
+		v.signup(w, data)
 	default:
 		v.notFound(w, data)
 	}
@@ -107,6 +112,11 @@ func (v *View) contact(w http.ResponseWriter, data any) {
 // faq view, which receives faq data.
 func (v *View) faq(w http.ResponseWriter, data any) {
 	v.renderTemplate(w, v.templates["faq"], data)
+}
+
+// signup view, which receives signup data.
+func (v *View) signup(w http.ResponseWriter, data any) {
+	v.renderTemplate(w, v.templates["signup"], data)
 }
 
 // notfound view for 404 errors.

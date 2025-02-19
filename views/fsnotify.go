@@ -2,13 +2,16 @@ package views
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
+
+// flushDuration sets the time given to wait for multiple editor writes
+var flushDuration time.Duration = 50 * time.Millisecond
 
 // watchDir watches a directory for events, deferring the monitor the
 // fileLoop goroutine. This code is largely taken from:
@@ -16,6 +19,7 @@ import (
 func watchDir(path string, fileMatcher *regexp.Regexp, done <-chan bool) (<-chan bool, error) {
 
 	eventChan := make(chan bool)
+	bufferChan := make(chan bool)
 
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -47,7 +51,7 @@ func watchDir(path string, fileMatcher *regexp.Regexp, done <-chan bool) (<-chan
 					panic("unexpected close")
 					return
 				}
-				if e.Has(fsnotify.Chmod) || e.Has(fsnotify.Create) {
+				if !e.Has(fsnotify.Write) {
 					continue
 				}
 				// fmt.Println(e.Name, e.String())
@@ -59,18 +63,36 @@ func watchDir(path string, fileMatcher *regexp.Regexp, done <-chan bool) (<-chan
 		}
 	}()
 
+	// crude buffer of double writes by editors like vim
+	go func() {
+		flush := false
+		timer := time.NewTicker(flushDuration)
+		for {
+			select {
+			case <-eventChan:
+				flush = true
+			case <-timer.C:
+				if flush {
+					bufferChan <- true
+					flush = false
+				}
+			}
+		}
+	}()
+
 	go func() {
 		wg.Wait()
 		close(eventChan)
 		defer w.Close()
 	}()
 
-	return eventChan, nil
+	return bufferChan, nil
 }
 
+/*
 func main() {
 	done := make(chan bool)
-	events, err := watchDir("/tmp/zan", regexp.MustCompile("(?i)^[a-z0-9].+html"), done)
+	events, err := watchDir("/tmp/zan", regexp.MustCompile("(?i)^[a-z0-9].+html$"), done)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -79,3 +101,4 @@ func main() {
 		fmt.Println("got!")
 	}
 }
+*/
