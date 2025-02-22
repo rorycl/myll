@@ -57,6 +57,7 @@ func (v *View) parseTemplates() error {
 		"faq":     []string{"faq.html", "tailwind.html"},
 		"404":     []string{"404.html", "tailwind.html"},
 		"signup":  []string{"signup.html", "tailwind.html"},
+		"usernew": []string{"usernew.html", "tailwind.html"},
 	}
 	v.templates = map[string]*template.Template{}
 	for endpoint, pages := range endpointToTpls {
@@ -94,6 +95,8 @@ func (v *View) Render(endpoint string, w http.ResponseWriter, data any) {
 		v.faq(w, data)
 	case "signup":
 		v.signup(w, data)
+	case "usernew":
+		v.usernew(w, data)
 	default:
 		v.notFound(w, data)
 	}
@@ -117,6 +120,11 @@ func (v *View) faq(w http.ResponseWriter, data any) {
 // signup view, which receives signup data.
 func (v *View) signup(w http.ResponseWriter, data any) {
 	v.renderTemplate(w, v.templates["signup"], data)
+}
+
+// usernew view, to make a new user
+func (v *View) usernew(w http.ResponseWriter, data any) {
+	v.renderTemplate(w, v.templates["usernew"], data)
 }
 
 // notfound view for 404 errors.

@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"mylenslocked/views"
 
@@ -37,6 +38,7 @@ func (c *controller) routes() *chi.Mux {
 	r.Get("/faq/{etc}", c.faq)
 	r.Get("/contact", c.contact)
 	r.Get("/signup", c.signup)
+	r.Post("/usernew", c.usernew)
 	r.NotFound(c.notFound)
 
 	return r
@@ -87,6 +89,24 @@ func (c *controller) faq2(w http.ResponseWriter, r *http.Request) {
 func (c *controller) signup(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{}
 	c.render("signup", w, data)
+}
+
+// usernew resolves the /usernew endpoint
+func (c *controller) usernew(w http.ResponseWriter, r *http.Request) {
+	vals, uerr := url.ParseQuery(r.URL.RawQuery)
+	ferr := r.ParseForm()
+	data := struct {
+		URLValues map[string][]string
+		UErr      error
+		Form      map[string][]string
+		FErr      error
+	}{
+		URLValues: vals,
+		UErr:      uerr,
+		Form:      r.PostForm,
+		FErr:      ferr,
+	}
+	c.render("usernew", w, data)
 }
 
 // notFound is a 404 endpoint
