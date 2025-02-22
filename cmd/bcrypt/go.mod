@@ -1,4 +1,4 @@
-module main
+module bcrypt
 
 go 1.22.5
 
