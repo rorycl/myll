@@ -1,0 +1,12 @@
+{{template "header" .}}
+<h1>Server Error</h1>
+<p>
+Sorry, there was an internal server error.
+</p>
+{{ if .inDevelopment }}
+<pre>
+Error:
+{{ . }}
+</pre>
+{{ end }}
+{{template "footer" .}}

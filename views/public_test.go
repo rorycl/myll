@@ -2,7 +2,6 @@ package views
 
 import (
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,35 +11,45 @@ import (
 
 // tpls defined in fs_test.go
 
-func TestViewGeneral(t *testing.T) {
+func TestViewPublic(t *testing.T) {
 
-	thisFs, err := newFileSystem("test", nil, "templates", true)
+	pv, err := NewPublicView("test", nil, "templates", true)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	tests := []struct {
 		input        map[string]string
-		thisFunc     func(fs.FS) (func(w http.ResponseWriter, data any), error)
+		thisFunc     func() (func(w http.ResponseWriter, data any), error)
 		expectedBody string
 	}{
 
 		{
-			input:        map[string]string{"URL": "/notfound"},
-			thisFunc:     NotFound,
-			expectedBody: "/notfound",
+			input:        map[string]string{"URL": "/"},
+			thisFunc:     pv.Home,
+			expectedBody: "Welcome",
 		},
 		{
-			input:        map[string]string{"inDevelopment": "true", "problem": "definitely"},
-			thisFunc:     InternalError,
-			expectedBody: "definitely",
+			input:        map[string]string{"URL": "/contact"},
+			thisFunc:     pv.Contact,
+			expectedBody: "contact",
+		},
+		{
+			input:        map[string]string{"URL": "/faq"},
+			thisFunc:     pv.FAQ,
+			expectedBody: "FAQ",
+		},
+		{
+			input:        map[string]string{"URL": "/signup"},
+			thisFunc:     pv.Signup,
+			expectedBody: "Start sharing",
 		},
 	}
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test_%d", i), func(t *testing.T) {
 			w := httptest.NewRecorder()
-			writerFunc, err := tt.thisFunc(thisFs.fS)
+			writerFunc, err := tt.thisFunc()
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -53,7 +62,6 @@ func TestViewGeneral(t *testing.T) {
 				fmt.Println(string(body))
 				t.Errorf("no '%s' found in body", tt.expectedBody)
 			}
-
 		})
 	}
 }
