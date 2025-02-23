@@ -60,7 +60,8 @@ func main() {
 
 	if inDevelopment {
 		go func() {
-			// ok to do this since these two viewers are the same
+			// ok to do this since these two viewers are for the same
+			// directory at present
 			for range viewerPublic.UpdateChan {
 				log.Println("template change detected...reloading")
 				publicRoutes(viewerPublic)

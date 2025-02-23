@@ -41,12 +41,5 @@ func NewUserView(fsName string, fS fs.FS, path string, inDevelopment bool) (*Use
 
 // NewUser shows a new user after succesful creation
 func (pv *UserView) NewUser() (func(w http.ResponseWriter, data any), error) {
-	pages := []string{"user_new.html", "tailwind.html"}
-	t, err := template.ParseFS(pv.fS.fS, pages...)
-	if err != nil {
-		return nil, fmt.Errorf("template parse error for %v: %w", pages, err)
-	}
-	return func(w http.ResponseWriter, data any) {
-		renderTemplate(w, t, data)
-	}, nil
+	return genericViewMaker(pv.fS.fS, "user_new.html", "tailwind.html")
 }

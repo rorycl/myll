@@ -14,6 +14,17 @@ import (
 // to in the template directory
 var tplFileRegexp *regexp.Regexp = regexp.MustCompile("(?i)^[a-z0-9].+html$")
 
+// genericViewMaker makes a generic view
+func genericViewMaker(fS fs.FS, pages ...string) (func(w http.ResponseWriter, data any), error) {
+	t, err := template.ParseFS(fS, pages...)
+	if err != nil {
+		return nil, fmt.Errorf("template parse error for %v: %w", pages, err)
+	}
+	return func(w http.ResponseWriter, data any) {
+		renderTemplate(w, t, data)
+	}, nil
+}
+
 // renderTemplate attempts to render a template t to ResponseWriter w
 // using data, reporting an http.Error if the execution fails.
 func renderTemplate(w http.ResponseWriter, t *template.Template, data any) {

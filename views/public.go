@@ -41,50 +41,22 @@ func NewPublicView(fsName string, fS fs.FS, path string, inDevelopment bool) (*P
 
 // home view
 func (pv *PublicView) Home() (func(w http.ResponseWriter, data any), error) {
-	pages := []string{"home.html", "tailwind.html"}
-	t, err := template.ParseFS(pv.fS.fS, pages...)
-	if err != nil {
-		return nil, fmt.Errorf("template parse error for %v: %w", pages, err)
-	}
-	return func(w http.ResponseWriter, data any) {
-		renderTemplate(w, t, data)
-	}, nil
+	return genericViewMaker(pv.fS.fS, "home.html", "tailwind.html")
 }
 
 // contact view
 func (pv *PublicView) Contact() (func(w http.ResponseWriter, data any), error) {
-	pages := []string{"contact.html", "tailwind.html"}
-	t, err := template.ParseFS(pv.fS.fS, pages...)
-	if err != nil {
-		return nil, fmt.Errorf("template parse error for %v: %w", pages, err)
-	}
-	return func(w http.ResponseWriter, data any) {
-		renderTemplate(w, t, data)
-	}, nil
+	return genericViewMaker(pv.fS.fS, "contact.html", "tailwind.html")
 }
 
 // faq view
 func (pv *PublicView) FAQ() (func(w http.ResponseWriter, data any), error) {
-	pages := []string{"faq.html", "tailwind.html"}
-	t, err := template.ParseFS(pv.fS.fS, pages...)
-	if err != nil {
-		return nil, fmt.Errorf("template parse error for %v: %w", pages, err)
-	}
-	return func(w http.ResponseWriter, data any) {
-		renderTemplate(w, t, data)
-	}, nil
+	return genericViewMaker(pv.fS.fS, "faq.html", "tailwind.html")
 }
 
 // signup view
 func (pv *PublicView) Signup() (func(w http.ResponseWriter, data any), error) {
-	pages := []string{"signup.html", "tailwind.html"}
-	t, err := template.ParseFS(pv.fS.fS, pages...)
-	if err != nil {
-		return nil, fmt.Errorf("template parse error for %v: %w", pages, err)
-	}
-	return func(w http.ResponseWriter, data any) {
-		renderTemplate(w, t, data)
-	}, nil
+	return genericViewMaker(pv.fS.fS, "signup.html", "tailwind.html")
 }
 
 // NotFound uses the generic NotFound endpoint

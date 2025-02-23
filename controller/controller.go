@@ -16,7 +16,7 @@ func makeRenderer(endpoint string, vf viewFunc) func(http.ResponseWriter, any) {
 	return r
 }
 
-// viewFunc makes an abstrace type of any view function
+// viewFunc makes an abstract type of any view function
 type viewFunc func() (func(w http.ResponseWriter, data any), error)
 
 // render adds a generic "render" function to a viewFunc
