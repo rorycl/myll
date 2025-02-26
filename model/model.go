@@ -141,6 +141,24 @@ func Row[T any](qCtx context.Context, m *Model, schemas []string, query string, 
 	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[T])
 }
 
+func Rows[T any](qCtx context.Context, m *Model, schemas []string, query string, args ...any) ([]T, error) {
+	var values []T
+	if m == nil || m.inited == false {
+		return values, errors.New("could not get row, model not inited")
+	}
+	if len(schemas) > 0 {
+		search_path := searchPathMaker(schemas)
+		if _, err := m.Exec(qCtx, search_path); err != nil {
+			return values, fmt.Errorf("row exec error: %w", err)
+		}
+	}
+	rows, err := m.Query(qCtx, query, args...)
+	if err != nil {
+		return values, fmt.Errorf("row query error: %w", err)
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[T])
+}
+
 // Shutdown cancels the connections through the ctx.CancelFunc held in
 // Model.
 func (m *Model) Shutdown() {

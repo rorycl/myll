@@ -48,6 +48,17 @@ func TestMModel(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Printf("%#v\n", o)
+
+	users, err := Rows[User](
+		ctx,
+		m,
+		search_path,
+		"select * from users",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("%#v\n", users)
 }
 
 func TestModel(t *testing.T) {
