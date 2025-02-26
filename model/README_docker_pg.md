@@ -16,3 +16,8 @@ docker run --name mll -d postgres
 ```
 
 export PG_ADMIN_PW="adminpw"
+
+```
+# access container
+docker exec -it model_db_1 bash
+```

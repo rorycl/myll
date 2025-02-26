@@ -9,6 +9,47 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+func TestMModel(t *testing.T) {
+	dsn := os.Getenv("PG_TEST_DB")
+	if dsn == "" {
+		t.Fatal("PG_TEST_DB dsn environmental variable not found")
+	}
+	ctx := context.Background()
+	m, err := NewModel(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	search_path := []string{"'myll'", `public`}
+
+	user, err := Row[User](
+		ctx,
+		m,
+		search_path,
+		"select * from users where id = $1",
+		1,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("%#v\n", user)
+
+	type x struct{ A int }
+	n, err := Row[x](ctx, m, nil, "select $1::int as a", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("%#v\n", n)
+
+	type y struct{ B string }
+	na := pgx.NamedArgs{"b": "hi"}
+	o, err := Row[y](ctx, m, nil, "select @b as b", na)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("%#v\n", o)
+}
+
 func TestModel(t *testing.T) {
 	dsn := os.Getenv("PG_TEST_DB")
 	if dsn == "" {
