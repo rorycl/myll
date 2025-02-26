@@ -1,0 +1,11 @@
+# from web development in go "Databases and SQL"
+#
+db: # service name
+  image: postgres:17-bullseye
+  restart: always 
+  environment: 
+    POSTGRES_USER: mylladmin
+    POSTGRES_PASSWORD: ${PG_ADMIN_PW}
+    POSTGRES_DB: myll
+  ports:
+    - 5432:5432 # here:container
