@@ -7,10 +7,13 @@ require (
 	github.com/georgysavva/scany/v2 v2.1.3
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.2.1
+	github.com/gorilla/csrf v1.7.2
+	github.com/gorilla/schema v1.4.1
 	github.com/jackc/pgx/v5 v5.7.2
 )
 
 require (
+	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect

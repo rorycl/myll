@@ -22,6 +22,9 @@ import (
 
 var model Model
 
+// Model shares a database pool for all database interactions in an app.
+// Model should only be initalised through NewModel which ensures only
+// one instance of a database pool exists.
 type Model struct {
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -42,7 +45,7 @@ var (
 
 // NewModel creates a new database model with database context and
 // pgxpool connection settings as supplied or as set out by the package
-// defaults. NewModel operates on the package global `model` and will
+// defaults. NewModel operates on the package global `model` and may
 // only be initialised once.
 func NewModel(dsn string) (*Model, error) {
 
@@ -95,6 +98,9 @@ func NewModel(dsn string) (*Model, error) {
 	return &model, nil
 }
 
+// searchPathMaker constructs a valid search_path string in the format
+//
+//	abc,def,'hij kl'
 func searchPathMaker(schemas []string) string {
 	s := pgx.Identifier(schemas)
 	s.Sanitize()
@@ -141,6 +147,20 @@ func Row[T any](qCtx context.Context, m *Model, schemas []string, query string, 
 	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[T])
 }
 
+// Rows provides a database pool query affecting 0 to many rows,
+// typically to be used by plpgsql table functions. Rows should be
+// called with the type of the intrinsic go struct type to be mapped to
+// a slice of returned type of the query.
+//
+// qCtx is the query-specific context, m is the model type providing the
+// database connection pool, schemas is the (possibly empty or nil) list
+// of database schemas to use from most specific to least, the query
+// itself using $1 type arguments (if any) and the variadic arguments to
+// fill the $1 placeholders. pgx.NamedArgs can also be used for the
+// args, in which case '@' type placeholders should be used. For
+// example:
+//
+//	users, err := Rows[User](ctx, m, search_path, "select * from users")
 func Rows[T any](qCtx context.Context, m *Model, schemas []string, query string, args ...any) ([]T, error) {
 	var values []T
 	if m == nil || m.inited == false {

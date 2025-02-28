@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/gorilla/csrf"
 )
 
 //go:embed views/templates/*html
@@ -20,22 +21,50 @@ var tpls embed.FS
 var inDevelopment bool = true
 
 func main() {
+
+	csrfToken := os.Getenv("MYLL_CSRF_TOKEN")
+	if csrfToken == "" || len(csrfToken) != 32 {
+		fmt.Println("MYLL_CSRF_TOKEN is not set or invalid, exiting")
+		os.Exit(1)
+	}
+	dbURL := os.Getenv("MYLL_DB_URL")
+	if dbURL == "" {
+		fmt.Println("MYLL_DB_URL is not set, exiting")
+		os.Exit(1)
+	}
+
 	viewerPublic, err := views.NewPublicView("public", nil, "views/templates", inDevelopment)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	viewerUser, err := views.NewUserView("user", nil, "views/templates", inDevelopment)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	viewerUser := views.NewUserViewFromView(viewerPublic)
 
 	r := chi.NewRouter()
 
 	// middleware
 	r.Use(middleware.Logger)
+
+	csrfMiddleware := csrf.Protect(
+		[]byte(csrfToken),
+		csrf.MaxAge(0),
+		csrf.Secure(true),
+		csrf.HttpOnly(true),
+		csrf.CookieName("myll"),
+		csrf.SameSite(csrf.SameSiteStrictMode),
+	)
+	if inDevelopment { // override csrf if in development
+		csrfMiddleware = csrf.Protect(
+			[]byte(csrfToken),
+			csrf.MaxAge(0),
+			csrf.Secure(false), // allow non-secure
+			csrf.HttpOnly(true),
+			csrf.CookieName("myll"),
+			csrf.SameSite(csrf.SameSiteStrictMode),
+		)
+	}
+	r.Use(csrfMiddleware)
 	// r.Use(middleware.Recoverer)
 
 	// attach public routes
@@ -60,8 +89,7 @@ func main() {
 
 	if inDevelopment {
 		go func() {
-			// ok to do this since these two viewers are for the same
-			// directory at present
+			// views share same mount point
 			for range viewerPublic.UpdateChan {
 				log.Println("template change detected...reloading")
 				publicRoutes(viewerPublic)

@@ -64,7 +64,11 @@ func faq2() func(http.ResponseWriter, *http.Request) {
 func Signup(vf viewFunc) func(http.ResponseWriter, *http.Request) {
 	rdr := makeRenderer("Signup", vf)
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := map[string]string{}
+		// validate user
+		// data := map[string]any{
+		// 	"CSRFField": csrf.TemplateField(r),
+		// }
+		data := struct{}
 		rdr(w, data)
 	}
 }
