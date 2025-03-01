@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/csrf"
 )
 
 // home resolves the / and /home endpoints
@@ -65,10 +66,9 @@ func Signup(vf viewFunc) func(http.ResponseWriter, *http.Request) {
 	rdr := makeRenderer("Signup", vf)
 	return func(w http.ResponseWriter, r *http.Request) {
 		// validate user
-		// data := map[string]any{
-		// 	"CSRFField": csrf.TemplateField(r),
-		// }
-		data := struct{}
+		data := map[string]any{
+			"CSRFField": csrf.TemplateField(r),
+		}
 		rdr(w, data)
 	}
 }

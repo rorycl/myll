@@ -33,13 +33,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	viewerPublic, err := views.NewPublicView("public", nil, "views/templates", inDevelopment)
+	viewer, err := views.NewView("public", nil, "views/templates", inDevelopment)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	viewerUser := views.NewUserViewFromView(viewerPublic)
+	viewerPublic := views.NewPublicViewFromView(viewer)
+	viewerUser := views.NewUserViewFromView(viewer)
 
 	r := chi.NewRouter()
 

@@ -17,6 +17,13 @@ func NewPublicView(fsName string, fS fs.FS, path string, inDevelopment bool) (*P
 	return &pv, err
 }
 
+// NewPublicViewFromView initialises a new PublicView from an existing
+// view which has the same mount point.
+func NewPublicViewFromView(v *View) *PublicView {
+	pv := PublicView(*v)
+	return &pv
+}
+
 // NewView creates a new View.
 
 // home view
